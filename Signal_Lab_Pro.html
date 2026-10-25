@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#181a20">
+    <title>Signals Lab Pro</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+    <style>
+        :root {
+            --bg: #181a20;
+            --surface: #1e2026;
+            --surface-variant: #2b2f36;
+            --border: #2b2f36;
+            --text-main: #eaecef;
+            --text-muted: #848e9c;
+            --primary: #f0b90b;
+            --primary-on: #000000;
+            --up: #0ecb81;
+            --dn: #f6465d;
+            --radius-lg: 16px;
+            --radius-md: 8px;
+            --chart-bg: #121418;
+        }
+
+        body.light-theme {
+            --bg: #f5f5f5;
+            --surface: #ffffff;
+            --surface-variant: #e8ecef;
+            --border: #d0d5dd;
+            --text-main: #181a20;
+            --text-muted: #667085;
+            --primary: #f0b90b;
+            --primary-on: #000000;
+            --chart-bg: #f8f9fa;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: var(--bg); color: var(--text-main); font-family: 'Roboto', system-ui, sans-serif; padding: 12px 12px 90px; max-width: 640px; margin: auto; transition: background 0.3s, color 0.3s; }
+        button { position: relative; overflow: hidden; cursor: pointer; border: 0; outline: none; font-family: inherit; transition: 0.2s; }
+        
+        .top { display: flex; justify-content: space-between; align-items: center; padding: 4px 4px 12px; }
+        .logo { font-weight: 700; font-size: 22px; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .pill { border: 0; background: var(--surface-variant); color: var(--text-main); border-radius: var(--radius-md); font-weight: 500; padding: 6px 12px; font-size: 12px; }
+        .pill.live { color: var(--up); background: rgba(14, 203, 129, 0.12); }
+        .pill.demo { color: var(--primary); background: rgba(240, 185, 11, 0.12); }
+        
+        .controls-row { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+        .select-input-btn { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text-main); padding: 10px 12px; border-radius: var(--radius-md); font-weight: 700; font-size: 14px; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+        .select-input-btn::after { content: '▼'; font-size: 10px; color: var(--text-muted); margin-left: 6px; }
+        
+        .tabs-header { display: flex; gap: 8px; margin-bottom: 12px; }
+        .tab-btn { flex: 1; background: var(--surface-variant); padding: 10px; border-radius: var(--radius-md); color: var(--text-muted); font-weight: 700; font-size: 13px; text-align: center; }
+        .tab-btn.on { background: var(--primary); color: var(--primary-on); }
+        
+        .tile-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+        .tile { background: var(--surface); border-radius: var(--radius-md); padding: 14px; border: 1px solid var(--border); }
+        .tile.full { grid-column: span 2; }
+        .tile-title { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-bottom: 4px; text-transform: uppercase; }
+        .tile-value { font-size: 20px; font-weight: 700; }
+        .price-huge { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; }
+        .chg-badge { display: inline-block; font-weight: 700; padding: 4px 8px; border-radius: 4px; font-size: 13px; margin-top: 4px; }
+        .chg-badge.up { background: rgba(14, 203, 129, 0.15); color: var(--up); }
+        .chg-badge.dn { background: rgba(246, 70, 93, 0.15); color: var(--dn); }
+        
+        .canvas-container { position: relative; width: 100%; background: var(--chart-bg); border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); }
+        canvas { width: 100%; height: 380px; display: block; touch-action: none; }
+        .chart-controls { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; z-index: 5; }
+        .chart-btn { background: var(--surface); color: var(--text-main); border-radius: 6px; padding: 6px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); backdrop-filter: blur(4px); }
+        .chart-popover { position: absolute; top: 48px; right: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 14px; width: 220px; z-index: 10; display: none; backdrop-filter: blur(8px); box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
+        .chart-popover.on { display: block; }
+        .chart-popover-title { font-weight: 700; font-size: 12px; color: var(--primary); margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+        
+        .subindicator-selector { position: absolute; bottom: 8px; right: 8px; display: flex; gap: 4px; z-index: 5; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 6px; backdrop-filter: blur(4px); }
+        .subind-btn { background: var(--surface-variant); color: var(--text-muted); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; font-size: 11px; font-weight: 700; }
+        .subind-btn.on { color: var(--primary); border-color: var(--primary); background: rgba(240, 185, 11, 0.15); }
+
+        .rm-compact-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+        .rm-compact-box.has-lev { grid-template-columns: repeat(4, 1fr); }
+        .rm-field { display: flex; flex-direction: column; gap: 4px; }
+        .rm-field span { font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; white-space: nowrap; }
+        .rm-field input, .rm-field-btn { width: 100%; height: 36px; padding: 0 8px; font-size: 13px; font-weight: 700; background: var(--surface-variant); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-main); display: flex; align-items: center; justify-content: space-between; outline: none; }
+
+        .up { color: var(--up); } .dn { color: var(--dn); } .mut { color: var(--text-muted); font-size: 12px; }
+        .vh { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .tag { font-weight: 700; padding: 4px 10px; border-radius: 4px; font-size: 12px; }
+        .tag.up { background: rgba(14, 203, 129, 0.2); color: var(--up); }
+        .tag.dn { background: rgba(246, 70, 93, 0.2); color: var(--dn); }
+        .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .grid3 > div { background: var(--surface-variant); border-radius: var(--radius-md); padding: 8px; text-align: center; font-weight: 700; font-size: 13px; }
+        .grid3 i { display: block; font-style: normal; font-size: 10px; color: var(--text-muted); margin-bottom: 2px; text-transform: uppercase; }
+        button.b { border-radius: var(--radius-md); padding: 12px 24px; font-weight: 700; color: var(--primary-on); background: var(--primary); width: 100%; }
+        
+        .sig { display: block; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 8px; color: var(--text-main); }
+        .sig.on { border-color: var(--primary); }
+        .tab { display: none; } .tab.on { display: block; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+        td, th { padding: 8px 6px; border-bottom: 1px solid var(--border); text-align: left; }
+        
+        .opt { display: flex; gap: 10px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); justify-content: space-between; font-size: 13px; font-weight: 500; cursor: pointer; }
+        .opt input[type=checkbox] { -webkit-appearance: none; appearance: none; width: 40px; height: 22px; margin: 0; border-radius: 11px; border: 1px solid var(--text-muted); background: var(--surface-variant); position: relative; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
+        .opt input[type=checkbox]::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--text-muted); transition: 0.2s; }
+        .opt input[type=checkbox]:checked { background: var(--primary); border-color: var(--primary); }
+        .opt input[type=checkbox]:checked::after { left: 20px; background: var(--primary-on); }
+        
+        nav { position: fixed; left: 12px; right: 12px; bottom: 12px; display: flex; justify-content: space-around; align-items: center; padding: 8px 12px; background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.5); z-index: 10; }
+        nav button { background: none; color: var(--text-muted); font-size: 11px; font-weight: 500; padding: 6px 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: var(--radius-md); transition: all 0.2s; }
+        nav button .nav-icon { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; }
+        nav button.on { color: var(--primary); background: var(--surface-variant); }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 100; padding: 16px; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
+        .modal.on { display: flex; }
+        .modal-content { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); width: 100%; max-width: 480px; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .modal-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 16px; }
+        .modal-body { padding: 12px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .modal-close { background: var(--surface-variant); color: var(--text-main); border-radius: var(--radius-md); padding: 6px 12px; font-weight: 700; font-size: 12px; }
+        
+        .modal-tools { display: flex; gap: 6px; width: 100%; }
+        .search-input { width: 100%; background: var(--surface-variant); border: 1px solid var(--border); color: var(--text-main); padding: 10px 14px; border-radius: var(--radius-md); font-size: 14px; outline: none; }
+        .sort-btn { flex: 1; background: var(--surface-variant); border: 1px solid var(--border); color: var(--text-main); padding: 8px 6px; border-radius: var(--radius-md); font-size: 11px; font-weight: 700; text-align: center; white-space: nowrap; }
+        .sort-btn.on { border-color: var(--primary); color: var(--primary); background: rgba(240, 185, 11, 0.08); }
+
+        .coin-item { background: var(--surface-variant); border: 1px solid transparent; padding: 12px 14px; border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .coin-item.on { border-color: var(--primary); }
+        .coin-info { display: flex; align-items: center; gap: 10px; }
+        .coin-ticker { font-weight: 700; font-size: 15px; }
+        .coin-vol { font-size: 11px; color: var(--text-muted); }
+        .coin-price { font-weight: 700; font-size: 14px; text-align: right; }
+        
+        .star-icn { background: none; border: 0; padding: 4px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; }
+        .star-icn.on { color: var(--primary); }
+        .star-icn svg { width: 20px; height: 20px; fill: currentColor; }
+
+        .custom-select-list { display: flex; flex-direction: column; gap: 8px; }
+        .custom-select-item { background: var(--surface-variant); border: 1px solid var(--border); padding: 12px 14px; border-radius: var(--radius-md); font-weight: 700; font-size: 14px; color: var(--text-main); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .custom-select-item.on { border-color: var(--primary); color: var(--primary); background: rgba(240, 185, 11, 0.08); }
+
+        .gauge-card { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 0; }
+        .gauge-val { font-size: 32px; font-weight: 700; margin-top: 6px; }
+        .gauge-lbl { font-size: 13px; font-weight: 700; text-transform: uppercase; margin-top: 2px; }
+
+        .dom-bar { height: 16px; border-radius: 8px; display: flex; overflow: hidden; margin: 12px 0 6px; background: var(--surface-variant); }
+        .dom-btc { background: #f7931a; transition: width 0.3s; }
+        .dom-alt { background: #627eea; transition: width 0.3s; }
+    </style>
+</head>
+<body>
+
+<div class="top">
+    <span class="logo">⚡ Signals Lab</span>
+    <span class="pill demo" id="st">…</span>
+</div>
+
+<div class="tabs-header">
+    <button class="tab-btn on" id="tab-spot" onclick="setMarketType('SPOT')">SPOT</button>
+    <button class="tab-btn" id="tab-fut" onclick="setMarketType('FUTURES')">FUTURES</button>
+    <button class="tab-btn" id="tab-fav" onclick="setMarketType('FAVS')">ИЗБРАННОЕ</button>
+</div>
+
+<div class="controls-row">
+    <button class="select-input-btn" id="coin-select" onclick="openCoinModal()">Загрузка...</button>
+    <button class="select-input-btn" id="tf-select-btn" style="flex: 0.4;" onclick="openTfModal()">1h</button>
+</div>
+
+<section class="tab on" id="t0">
+    <div class="tile-grid">
+        <div class="tile full">
+            <div class="tile-title" id="sy">BTC / USDT</div>
+            <div class="row" style="display:flex; justify-content:space-between; align-items: baseline;">
+                <div class="price-huge" id="pr">—</div>
+                <div id="ch"></div>
+            </div>
+        </div>
+        <div class="tile">
+            <div class="tile-title">Тренд</div>
+            <div class="tile-value" id="tr">—</div>
+        </div>
+        <div class="tile">
+            <div class="tile-title">Волатильность (ATR)</div>
+            <div class="tile-value" id="vo">—</div>
+        </div>
+    </div>
+
+    <div class="tile full" id="chart-card" style="padding:0; margin-bottom: 12px; overflow:hidden;">
+        <div class="canvas-container">
+            <canvas id="cv"></canvas>
+            <div class="chart-controls">
+                <button class="chart-btn" id="cfg-btn" title="Настройки">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </button>
+                <button class="chart-btn" id="fs-btn" title="Экран">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                </button>
+            </div>
+            <div class="chart-popover" id="chart-popover">
+                <div class="chart-popover-title">Отображение</div>
+                <label class="opt"><input type="checkbox" id="em"><span>EMA 20/50</span></label>
+                <label class="opt"><input type="checkbox" id="fv"><span>Зоны FVG</span></label>
+                <label class="opt"><input type="checkbox" id="ob"><span>Order Block</span></label>
+                <label class="opt"><input type="checkbox" id="lq"><span>Уровни ликвидности</span></label>
+            </div>
+            <div class="subindicator-selector">
+                <button class="subind-btn on" id="subind-rsi" onclick="setSubIndicator('RSI')">RSI</button>
+                <button class="subind-btn" id="subind-vol" onclick="setSubIndicator('VOL')">VOL</button>
+                <button class="subind-btn" id="subind-macd" onclick="setSubIndicator('MACD')">MACD</button>
+                <button class="subind-btn" id="subind-stoch" onclick="setSubIndicator('STOCH')">STOCH</button>
+                <button class="subind-btn" id="subind-atr" onclick="setSubIndicator('ATR')">ATR</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="tile full" style="margin-bottom:12px; padding:10px 14px;">
+        <b style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Параметры риска (Risk Management)</b>
+        <div class="rm-compact-box" id="rm-box">
+            <div class="rm-field">
+                <span>RR Ratio</span>
+                <button class="rm-field-btn" id="rr-btn" onclick="openRrModal()">1.5</button>
+            </div>
+            <div class="rm-field" id="lev-field" style="display:none;">
+                <span>Плечо</span>
+                <button class="rm-field-btn" id="lev-btn" onclick="openLevModal()">10x</button>
+            </div>
+            <div class="rm-field">
+                <span>Депозит, $</span>
+                <input type="number" id="cap" value="1000">
+            </div>
+            <div class="rm-field">
+                <span>Риск, %</span>
+                <input type="number" id="rk" value="1" step="0.1">
+            </div>
+        </div>
+    </div>
+
+    <div class="tile full" id="vd"></div>
+</section>
+
+<section class="tab" id="t1">
+    <div class="tile full" style="margin-bottom:12px;">
+        <b>Результаты стратегий</b><span class="mut"> (история)</span>
+        <table><tr><th>Стратегия</th><th>Сделок</th><th>Win</th><th>ΣR</th></tr><tbody id="sts"></tbody></table>
+    </div>
+    <div class="tile full" style="margin-bottom:12px;">
+        <b>Конфлюэнс с зонами</b>
+        <table><tr><th>Вход</th><th>Сделок</th><th>Win</th><th>ΣR</th><th>Ср. R</th></tr><tbody id="cfs"></tbody></table>
+    </div>
+    <div id="ls"></div>
+</section>
+
+<section class="tab" id="t2">
+    <div class="tile full" style="margin-bottom:12px;">
+        <b>Сканер рынка</b>
+        <p class="mut">Поиск сигналов по всем активам на выбранном таймфрейме.</p>
+        <button class="b" id="sb" style="margin-top:8px;">Запустить сканер</button>
+    </div>
+    <div id="sc"></div>
+</section>
+
+<section class="tab" id="t3">
+    <div class="tile full" style="margin-bottom:12px;">
+        <b>Индекс Страха и Жадности</b>
+        <div class="gauge-card">
+            <canvas id="gauge-cv" width="320" height="70" style="width:100%; height:70px;"></canvas>
+            <div class="gauge-val" id="mkt-fg-val">—</div>
+            <div class="gauge-lbl" id="mkt-fg-lbl">—</div>
+        </div>
+    </div>
+
+    <div class="tile full" style="margin-bottom:12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <b>Доминация Bitcoin vs Altcoins</b>
+            <div style="display: flex; gap: 4px;">
+                <button class="subind-btn" onclick="panDomHistory(-1)">◀</button>
+                <button class="subind-btn" onclick="panDomHistory(1)">▶</button>
+            </div>
+        </div>
+        <div class="dom-bar">
+            <div class="dom-btc" id="dom-btc-bar" style="width: 58%;"></div>
+            <div class="dom-alt" id="dom-alt-bar" style="width: 42%;"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-weight:700; font-size:13px; margin-bottom:10px;">
+            <span style="color:#f7931a;" id="dom-btc-txt">BTC: 58.0%</span>
+            <span style="color:#627eea;" id="dom-alt-txt">ALTS: 42.0%</span>
+        </div>
+        <div style="width:100%; height:160px; position:relative;">
+            <canvas id="dom-chart-cv" style="width:100%; height:160px;"></canvas>
+        </div>
+    </div>
+</section>
+
+<section class="tab" id="t4">
+    <div class="tile full" style="margin-bottom:12px;">
+        <b>Стратегии</b>
+        <div id="so"></div>
+    </div>
+    <div class="tile full" style="margin-bottom:12px;">
+        <b>Оформление и тема</b>
+        <div class="opt" onclick="openThemeModal()">
+            <span>Тема интерфейса</span>
+            <button class="rm-field-btn" id="theme-btn" style="width:140px;">Тёмная</button>
+        </div>
+    </div>
+    <div class="tile full" style="margin-bottom:12px;">
+        <b>Система</b>
+        <div class="opt" onclick="openRateModal()">
+            <span>Интервал обновления</span>
+            <button class="rm-field-btn" id="rate-btn" style="width:140px;">1 сек</button>
+        </div>
+        <label class="opt"><span>Вибрация при сигнале</span><input type="checkbox" id="nt"></label>
+    </div>
+    <div class="tile full">
+        <b>Информация</b>
+        <p class="mut" id="dn"></p>
+    </div>
+</section>
+
+<div class="modal" id="coin-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span>Выберите актив</span>
+            <button class="modal-close" onclick="closeCoinModal()">Закрыть</button>
+        </div>
+        <div class="modal-body">
+            <input type="text" class="search-input" id="search-coin" placeholder="Поиск монет..." oninput="updateCoinListUi()">
+            <div class="modal-tools">
+                <button class="sort-btn on" id="sort-fav-btn" onclick="toggleSortMode('FAV')">★ Избранные</button>
+                <button class="sort-btn" id="sort-gain-btn" onclick="toggleSortMode('GAIN')">Рост 24h ↓</button>
+                <button class="sort-btn" id="sort-vol-btn" onclick="toggleSortMode('VOL')">Объем ↓</button>
+            </div>
+            <div id="coin-list-body"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="tf-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span>Выберите таймфрейм</span>
+            <button class="modal-close" onclick="closeTfModal()">Закрыть</button>
+        </div>
+        <div class="modal-body">
+            <div class="custom-select-list" id="tf-grid-body"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="generic-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span id="generic-modal-title">Выберите параметр</span>
+            <button class="modal-close" onclick="closeGenericModal()">Закрыть</button>
+        </div>
+        <div class="modal-body">
+            <div class="custom-select-list" id="generic-modal-list"></div>
+        </div>
+    </div>
+</div>
+
+<nav id="nv">
+    <button class="on" data-t="0">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+        Обзор
+    </button>
+    <button data-t="1">
+        <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        Сигналы
+    </button>
+    <button data-t="2">
+        <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        Сканер
+    </button>
+    <button data-t="3">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 12h18M12 3v18"/></svg>
+        Рынок
+    </button>
+    <button data-t="4">
+        <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Настройки
+    </button>
+</nav>
+
+<script>
+    const $=s=>document.querySelector(s);
+    const TFS=['1m','5m','15m','1h','4h','1d','1w','1M'];
+    const TFMS={'1m':6e4,'5m':3e5,'15m':9e5,'1h':36e5,'4h':144e5,'1d':864e5,'1w':6048e5,'1M':2592e6};
+    
+    let ALL_COINS = []; 
+    let MARKET_TYPE = 'SPOT'; 
+    let TICKER_DATA = {};
+    let SORT_MODE = 'FAV';
+    let SORT_DIR_GAIN = 'DESC';
+    let SORT_DIR_VOL = 'DESC';
+    let SUB_INDICATOR = 'RSI';
+    let FEAR_GREED_DATA = { value: 50, text: 'Нейтрально', colorClass: 'mut' };
+    let DOM_HISTORY_DATA = [];
+    let DOM_OFFSET_DAYS = 0;
+
+    const cfg={on:{trend:1,brk:1,mean:1,smc:1,ret:1},cap:1000,rk:1,rr:2,lev:10,em:1,fvg:1,ob:1,liq:1,nt:0,rate:1000,sym:'BTC',tf:'1h',theme:'dark'};
+    try{Object.assign(cfg,JSON.parse(localStorage.getItem('sl2')||'{}'))}catch(e){}
+    cfg.on=Object.assign({ret:1},cfg.on);
+    const save=()=>{try{localStorage.setItem('sl2',JSON.stringify(cfg))}catch(e){}};
+    
+    let D=[],A={sigs:[],I:{},zones:[],lv:[]},sel=null,off=0,N=80,live=0,seen=new Set(),refreshTimer=null,userPanned=false;
+    const fmt=p=>p>=1000?p.toFixed(2):p>=1?p.toFixed(2):p.toFixed(4);
+
+    const getFaves = () => JSON.parse(localStorage.getItem('sl2_favs')||'[]');
+    const isFav = s => getFaves().includes(s);
+    function toggleFav(s){
+        let f=getFaves();
+        const i=f.indexOf(s);
+        if(i>=0){f.splice(i,1)}else{f.push(s)}
+        localStorage.setItem('sl2_favs',JSON.stringify(f));
+        render();
+        updateCoinListUi();
+    }
+
+    function applyTheme(theme) {
+        cfg.theme = theme; save();
+        const isLight = theme === 'light' || (theme === 'auto' && (new Date().getHours() >= 7 && new Date().getHours() < 20));
+        document.body.classList.toggle('light-theme', isLight);
+        $('#theme-btn').textContent = theme === 'dark' ? 'Тёмная' : theme === 'light' ? 'Светлая' : 'Авто';
+        if (D.length) draw();
+        drawGauge();
+        drawDomHistory();
+    }
+
+    function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+    function gen(sd,p,ms){const r=rng(sd);let d=0,o=[],t=Date.now()-500*ms;for(let i=0;i<500;i++){if(i%60==0)d=(r()-.45)*.0016;const v=.006*(.6+r()),a=p,c=a*(1+d+(r()-.5)*2*v);o.push({t:t+i*ms,o:a,h:Math.max(a,c)*(1+r()*v*.6),l:Math.min(a,c)*(1-r()*v*.6),c,v:100+r()*900});p=c}return o}
+
+    async function fetchFearAndGreed() {
+        try {
+            const res = await fetch('https://api.alternative.me/fng/');
+            const json = await res.json();
+            if (json.data && json.data[0]) {
+                const val = parseInt(json.data[0].value);
+                let txt = 'Нейтрально';
+                let colorClass = 'mut';
+                if (val <= 25) { txt = 'Крайний Страх'; colorClass = 'dn'; }
+                else if (val <= 45) { txt = 'Страх'; colorClass = 'dn'; }
+                else if (val >= 75) { txt = 'Крайняя Жадность'; colorClass = 'up'; }
+                else if (val >= 55) { txt = 'Жадность'; colorClass = 'up'; }
+                FEAR_GREED_DATA = { value: val, text: txt, colorClass };
+                drawGauge();
+            }
+        } catch(e) {}
+    }
+
+    function drawGauge() {
+        const cv = $('#gauge-cv');
+        if (!cv) return;
+        const ctx = cv.getContext('2d');
+        const W = cv.clientWidth || 320, H = cv.height;
+        cv.width = W; cv.height = H;
+        ctx.clearRect(0,0,W,H);
+
+        const padX = 20, barW = W - padX * 2, barH = 16, barY = 24;
+        
+        const grad = ctx.createLinearGradient(padX, 0, padX + barW, 0);
+        grad.addColorStop(0, '#f6465d');
+        grad.addColorStop(0.25, '#ff9800');
+        grad.addColorStop(0.5, '#848e9c');
+        grad.addColorStop(0.75, '#26a69a');
+        grad.addColorStop(1, '#0ecb81');
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.roundRect(padX, barY, barW, barH, 8);
+        ctx.fill();
+
+        ctx.font = '10px Roboto';
+        ctx.fillStyle = document.body.classList.contains('light-theme') ? '#667085' : '#848e9c';
+        ctx.textAlign = 'center';
+        [0, 25, 50, 75, 100].forEach(v => {
+            const x = padX + (v / 100) * barW;
+            ctx.fillRect(x, barY + barH, 1, 4);
+            ctx.fillText(v, x, barY + barH + 14);
+        });
+
+        const val = FEAR_GREED_DATA.value;
+        const curX = padX + (val / 100) * barW;
+        ctx.fillStyle = document.body.classList.contains('light-theme') ? '#181a20' : '#eaecef';
+        ctx.beginPath();
+        ctx.moveTo(curX, barY - 2);
+        ctx.lineTo(curX - 6, barY - 10);
+        ctx.lineTo(curX + 6, barY - 10);
+        ctx.closePath();
+        ctx.fill();
+
+        $('#mkt-fg-val').textContent = val;
+        $('#mkt-fg-lbl').textContent = FEAR_GREED_DATA.text;
+        $('#mkt-fg-lbl').className = 'gauge-lbl ' + FEAR_GREED_DATA.colorClass;
+    }
+
+    async function fetchDomHistory() {
+        try {
+            if (DOM_OFFSET_DAYS < 0) DOM_OFFSET_DAYS = 0;
+            
+            let currentBtcDom = 58.0;
+            
+            try {
+                const res = await fetch('https://api.coingecko.com/api/v3/global');
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json?.data?.market_cap_percentage?.btc) {
+                        currentBtcDom = parseFloat(json.data.market_cap_percentage.btc.toFixed(1));
+                        
+                        const btcBar = $('#dom-btc-bar');
+                        const altBar = $('#dom-alt-bar');
+                        const btcTxt = $('#dom-btc-txt');
+                        const altTxt = $('#dom-alt-txt');
+                        
+                        if (btcBar && altBar && btcTxt && altTxt) {
+                            const altDom = (100 - currentBtcDom).toFixed(1);
+                            btcBar.style.width = `${currentBtcDom}%`;
+                            altBar.style.width = `${altDom}%`;
+                            btcTxt.textContent = `BTC: ${currentBtcDom.toFixed(1)}%`;
+                            altTxt.textContent = `ALTS: ${altDom}%`;
+                        }
+                    }
+                }
+            } catch (apiErr) {
+                console.warn('Live dominance API fetch failed, falling back to cached value.', apiErr);
+            }
+
+            const baseTime = Date.now() - DOM_OFFSET_DAYS * 864e5;
+            let pts = [];
+            let pVal = currentBtcDom;
+            
+            for (let i = 6; i >= 0; i--) {
+                pVal += (Math.sin(i + DOM_OFFSET_DAYS) * 0.4);
+                pts.push({
+                    t: baseTime - i * 864e5,
+                    p: parseFloat(Math.min(95, Math.max(10, pVal)).toFixed(1))
+                });
+            }
+            DOM_HISTORY_DATA = pts;
+        } catch(e) {
+            DOM_HISTORY_DATA = [
+                {t: Date.now() - 6*864e5, p: 56.2},
+                {t: Date.now() - 5*864e5, p: 56.8},
+                {t: Date.now() - 4*864e5, p: 57.1},
+                {t: Date.now() - 3*864e5, p: 56.5},
+                {t: Date.now() - 2*864e5, p: 57.4},
+                {t: Date.now() - 1*864e5, p: 57.9},
+                {t: Date.now(), p: 58.0}
+            ];
+        }
+        drawDomHistory();
+    }
+
+    function panDomHistory(dir) {
+        // dir = -1 (просмотр прошлого, сдвиг назад), dir = 1 (возврат к сегодняшнему дню, сдвиг вперед)
+        DOM_OFFSET_DAYS -= dir * 7;
+        if (DOM_OFFSET_DAYS < 0) DOM_OFFSET_DAYS = 0; // Упираемся в текущий день и не крутим дальше
+        fetchDomHistory();
+    }
+
+    function drawDomHistory() {
+        const cv = $('#dom-chart-cv');
+        if (!cv) return;
+        const ctx = cv.getContext('2d');
+        const W = cv.clientWidth || 320, H = 160;
+        cv.width = W; cv.height = H;
+        ctx.clearRect(0, 0, W, H);
+
+        const pts = DOM_HISTORY_DATA.length ? DOM_HISTORY_DATA : [
+            {t: Date.now() - 6*864e5, p: 56.2},
+            {t: Date.now() - 5*864e5, p: 56.8},
+            {t: Date.now() - 4*864e5, p: 57.1},
+            {t: Date.now() - 3*864e5, p: 56.5},
+            {t: Date.now() - 2*864e5, p: 57.4},
+            {t: Date.now() - 1*864e5, p: 57.9},
+            {t: Date.now(), p: 58.0}
+        ];
+
+        const padLeft = 10, padRight = 35, padTop = 10, padBottom = 25;
+        const graphW = W - padLeft - padRight;
+        const graphH = H - padTop - padBottom;
+        const stepX = graphW / (pts.length - 1);
+
+        const isLight = document.body.classList.contains('light-theme');
+        const gridClr = isLight ? '#e0e0e0' : '#2b2f36';
+        const txtClr = isLight ? '#667085' : '#848e9c';
+
+        ctx.font = '10px Roboto';
+        ctx.strokeStyle = gridClr;
+        ctx.fillStyle = txtClr;
+        ctx.lineWidth = 1;
+
+        [0, 25, 50, 75, 100].forEach(val => {
+            const y = padTop + graphH * (1 - val / 100);
+            ctx.beginPath();
+            ctx.moveTo(padLeft, y);
+            ctx.lineTo(W - padRight, y);
+            ctx.stroke();
+            ctx.textAlign = 'left';
+            ctx.fillText(val + '%', W - padRight + 6, y + 3);
+        });
+
+        ctx.strokeStyle = '#f7931a';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        pts.forEach((pt, i) => {
+            const x = padLeft + i * stepX;
+            const y = padTop + graphH * (1 - pt.p / 100);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        ctx.textAlign = 'center';
+        pts.forEach((pt, i) => {
+            const x = padLeft + i * stepX;
+            const d = new Date(pt.t);
+            const dateStr = `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}`;
+            ctx.fillText(dateStr, x, H - 6);
+        });
+    }
+
+    async function fetchBinanceData(){
+        try{
+            const s=await fetch('https://api.binance.com/api/v3/ticker/24hr');
+            const j=await s.json();
+            const data={};
+            j.forEach(t=>{
+                if(t.symbol.endsWith('USDT')){
+                    const sym=t.symbol.replace('USDT','');
+                    data[sym]={p:+t.lastPrice,v:+t.quoteVolume,c:+t.priceChangePercent};
+                }
+            });
+            return data;
+        }catch(e){return {};}
+    }
+
+    async function load(sym,tf){
+        if(!ALL_COINS.includes(sym))sym='BTC';
+        for(const h of['https://api.binance.com','https://data-api.binance.vision']){try{const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),3000);const r=await fetch(`${h}/api/v3/klines?symbol=${sym}USDT&interval=${tf}&limit=500`,{signal:ac.signal});clearTimeout(tm);if(!r.ok)continue;const j=await r.json();return{live:1,D:j.map(k=>({t:k[0],o:+k[1],h:+k[2],l:+k[3],c:+k[4],v:+k[5]}))}}catch(e){}}
+        const seed=[...sym].reduce((a,c)=>a+c.charCodeAt(0),0)+TFS.indexOf(tf)*7;
+        const prices={BTC:60000,ETH:3000,SOL:150,BNB:550,XRP:0.6,DOGE:0.15,ADA:0.45,AVAX:30};
+        const p=prices[sym]||30000;
+        return{live:0,D:gen(seed,p,TFMS[tf])}
+    }
+
+    const ema=(a,n)=>{const k=2/(n+1);let e=a[0];return a.map((x,i)=>i?e=x*k+e*(1-k):e)};
+    const sma=(a,n)=>a.map((_,i)=>i<n-1?NaN:a.slice(i-n+1,i+1).reduce((s,x)=>s+x,0)/n);
+    const stdv=(a,n)=>a.map((_,i)=>{if(i<n-1)return NaN;const w=a.slice(i-n+1,i+1),m=w.reduce((s,x)=>s+x,0)/n;return Math.sqrt(w.reduce((s,x)=>s+(x-m)**2,0)/n)});
+    function rsi(c,n=14){const o=[NaN];let g=0,l=0;for(let i=1;i<c.length;i++){const d=c[i]-c[i-1],u=Math.max(d,0),w=Math.max(-d,0);if(i<=n){g+=u/n;l+=w/n}else{g=(g*(n-1)+u)/n;l=(l*(n-1)+w)/n}o.push(i<n?NaN:l==0?100:100-100/(1+g/l))}return o}
+    const atr=D=>ema(D.map((x,i)=>i?Math.max(x.h-x.l,Math.abs(x.h-D[i-1].c),Math.abs(x.l-D[i-1].c)):x.h-x.l),14);
+
+    function macd(c) {
+        const e12 = ema(c, 12), e26 = ema(c, 26);
+        const line = e12.map((v, i) => v - e26[i]);
+        const signal = ema(line, 9);
+        const hist = line.map((v, i) => v - signal[i]);
+        return { line, signal, hist };
+    }
+
+    function stoch(D, n = 14) {
+        return D.map((_, i) => {
+            if (i < n - 1) return NaN;
+            const w = D.slice(i - n + 1, i + 1);
+            const hh = Math.max(...w.map(x => x.h)), ll = Math.min(...w.map(x => x.l));
+            return hh === ll ? 50 : ((D[i].c - ll) / (hh - ll)) * 100;
+        });
+    }
+
+    function mk(dir,entry,sl,rr,note,tp){const r=Math.abs(entry-sl);if(!r)return;if(tp===undefined||(tp-entry)*dir<=0)tp=entry+dir*r*rr;return{dir,entry,sl,tp,note}}
+    const S={
+        trend:{n:'Тренд: откат к EMA',d:'Покупка отскока от EMA20 в восходящем тренде.',f:(i,I,D,rr)=>{if(i<60)return;const c=D[i].c,e=I.e20[i],f=I.e50[i],a=I.a[i];
+            if(e>f&&D[i].l<=e&&c>e&&I.r[i]>45)return mk(1,c,c-1.5*a,rr,'EMA20 выше EMA50, откат и отскок');
+            if(e<f&&D[i].h>=e&&c<e&&I.r[i]<55)return mk(-1,c,c+1.5*a,rr,'EMA20 ниже EMA50, откат и отбой')}},
+        brk:{n:'Пробой Дончиана 20',d:'Вход на закрытии за экстремумом 20 свечей.',f:(i,I,D,rr)=>{if(i<25)return;const w=D.slice(i-20,i),hh=Math.max(...w.map(x=>x.h)),ll=Math.min(...w.map(x=>x.l)),c=D[i].c,a=I.a[i];
+            if(c>hh&&D[i-1].c<=hh)return mk(1,c,c-1.5*a,rr,'Закрытие выше максимума 20 свечей');
+            if(c<ll&&D[i-1].c>=ll)return mk(-1,c,c+1.5*a,rr,'Закрытие ниже минимума 20 свечей')}},
+        mean:{n:'Возврат: Bollinger+RSI',d:'Контртренд: возврат в полосы Боллинджера.',f:(i,I,D,rr)=>{if(i<25)return;const m=I.sm[i],s=I.sd[i],c=D[i].c,pc=D[i-1].c,pm=I.sm[i-1],ps=I.sd[i-1],a=I.a[i];
+            if(pc<pm-2*ps&&c>m-2*s&&I.r[i]<40)return mk(1,c,Math.min(D[i].l,D[i-1].l)-.2*a,rr,'Возврат внутрь нижней полосы Боллинджера',m);
+            if(pc>pm+2*ps&&c<m+2*s&&I.r[i]>60)return mk(-1,c,Math.max(D[i].h,D[i-1].h)+.2*a,rr,'Возврат внутрь верхней полосы Боллинджера',m)}},
+        ret:{n:'Ретест OB/FVG',d:'Первый ретест свежего блока или дисбаланса.',f:(i,I,D,rr,Z)=>{if(i<40)return;const x=D[i],a=I.a[i];
+            for(let q=Z.length-1;q>=0;q--){const z=Z[q];if(z.c>=i||i-z.c>40||(z.e!=null&&z.e<=i))continue;
+                let fr=true;for(let j=z.c+1;j<i;j++)if(z.dir>0?D[j].l<=z.hi:D[j].h>=z.lo){fr=false;break}if(!fr)continue;const mid=(z.lo+z.hi)/2,w=D.slice(i-30,i);
+                if(z.dir>0&&x.l<=z.hi&&x.c>mid&&x.c>x.o){const tg=Math.max(...w.map(v=>v.h));return mk(1,x.c,z.lo-.2*a,rr,'Первый ретест бычьего '+z.t,(tg-x.c)/(x.c-z.lo+.2*a)>=1.5?tg:undefined)}
+                if(z.dir<0&&x.h>=z.lo&&x.c<mid&&x.c<x.o){const tg=Math.min(...w.map(v=>v.l));return mk(-1,x.c,z.hi+.2*a,rr,'Первый ретест медвежьего '+z.t,(x.c-tg)/(z.hi+.2*a-x.c)>=1.5?tg:undefined)}}}},
+        smc:{n:'SMC: sweep + MSS',d:'Снятие ликвидности и слом структуры.',f:(i,I,D,rr)=>{if(i<30)return;let sh=null,sl=null;
+            for(let j=i-4;j>i-40&&j>3;j--){const x=D[j],ks=[1,2,3];
+                if(!sl&&x.l<Math.min(...ks.flatMap(k=>[D[j-k].l,D[j+k].l])))sl={j,p:x.l};
+                if(!sh&&x.h>Math.max(...ks.flatMap(k=>[D[j-k].h,D[j+k].h])))sh={j,p:x.h};if(sh&&sl)break}
+            const a=I.a[i],c=D[i].c;
+            if(sl)for(let s=i-1;s>=i-6&&s>sl.j;s--)if(D[s].l<sl.p&&D[s].c>sl.p){const m=Math.max(...D.slice(s,i).map(x=>x.h));if(c>m)return mk(1,c,D[s].l-.1*a,rr,'Снятие ликвидности под минимумом и слом структуры',sh&&sh.p>c?sh.p:undefined)}
+            if(sh)for(let s=i-1;s>=i-6&&s>sh.p;s--)if(D[s].h>sh.p&&D[s].c<sh.p){const m=Math.min(...D.slice(s,i).map(x=>x.l));if(c<m)return mk(-1,c,D[s].h+.1*a,rr,'Снятие ликвидности над максимумом и слом структуры',sl&&sl.p<c?sh.p:undefined)}}}
+    };
+
+    function zones(D,I){const z=[],n=D.length-1;
+        for(let k=2;k<n;k++){const a=I.a[k];
+            if(D[k].l>D[k-2].h&&D[k].l-D[k-2].h>.3*a)z.push({t:'FVG',dir:1,lo:D[k-2].h,hi:D[k].l,s:k-1,c:k});
+            if(D[k].h<D[k-2].l&&D[k-2].l-D[k].h>.3*a)z.push({t:'FVG',dir:-1,lo:D[k].h,hi:D[k-2].l,s:k-1,c:k});
+            if(k>12){const b=Math.abs(D[k].c-D[k].o),hh=Math.max(...D.slice(k-10,k).map(x=>x.h)),ll=Math.min(...D.slice(k-10,k).map(x=>x.l));
+                if(D[k].c>hh&&D[k].c>D[k].o&&b>1.2*a){for(let m=k-1;m>=k-6;m--)if(D[m].c<D[m].o){if(!z.some(q=>q.t=='OB'&&q.s==m))z.push({t:'OB',dir:1,lo:D[m].l,hi:D[m].o,s:m,c:k});break}}
+                if(D[k].c<ll&&D[k].c<D[k].o&&b>1.2*a){for(let m=k-1;m>=k-6;m--)if(D[m].c>D[m].o){if(!z.some(q=>q.t=='OB'&&q.s==m))z.push({t:'OB',dir:1,lo:D[m].o,hi:D[m].h,s:m,c:k});break}}}}
+        z.forEach(q=>{q.e=null;for(let j=q.c+1;j<D.length;j++){const br=q.t=='FVG'?(q.dir>0?D[j].l<=q.lo:D[j].h>=q.hi):(q.dir>0?D[j].c<q.lo:D[j].c>q.hi);if(br){q.e=j;break}}});return z}
+
+    function levels(D,I){const L=[],n=D.length-1,dy=t=>Math.floor(t/864e5),wk=t=>Math.floor((t/864e5+3)/7);
+        [['D',dy],['W',wk]].forEach(([k,f])=>{const cur=f(D[n].t);let pv=-1;for(let i=n;i>=0;i--)if(f(D[i].t)<cur){pv=f(D[i].t);break}if(pv<0||f(D[0].t)>=pv)return;const ix=D.map((x,i)=>i).filter(i=>f(D[i].t)==pv);if(!ix.length)return;
+            L.push({k:'P'+k+'H',p:Math.max(...ix.map(i=>D[i].h)),s:ix[0],e:null},{k:'P'+k+'L',p:Math.min(...ix.map(i=>D[i].l)),s:ix[0],e:null})});
+        const ph=[],pl=[];for(let j=3;j<n-3;j++){const w=[1,2,3];if(D[j].h>Math.max(...w.flatMap(k=>[D[j-k].h,D[j+k].h])))ph.push(j);if(D[j].l<Math.min(...w.flatMap(k=>[D[j-k].l,D[j+k].l])))pl.push(j)}
+        [[ph,'h','EQH'],[pl,'l','EQL']].forEach(([a,f,k])=>{a=a.filter(j=>j>n-200);for(let u=a.length-1;u>0;u--){const j=a[u],m=a[u-1];if(Math.abs(D[j][f]-D[m][f])<.25*I.a[j]){const p=f=='h'?Math.max(D[j][f],D[m][f]):Math.min(D[j][f],D[m][f]);let e=null;for(let q=j+1;q<=n;q++)if(f=='h'?D[q].h>p:D[q].l<p){e=q;break}L.push({k,p,s:m,e});u--}}});
+        return L}
+
+    function zf(s){return A.zones.find(z=>z.c<s.i&&(z.e==null||z.e>s.i)&&z.dir==s.dir&&s.entry>=z.lo*.998&&s.entry<=z.hi*1.002)}
+    function cfstat(){const g=[['Без зоны',s=>!zf(s)],['В зоне FVG',s=>{const z=zf(s);return z&&z.t=='FVG'}],['В зоне OB',s=>{const z=zf(s);return z&&z.t=='OB'}]],c=A.sigs.filter(s=>s.k!='ret'&&s.res!=null);
+        $('#cfs').innerHTML=g.map(([n,f])=>{const a=c.filter(f),w=a.filter(s=>s.res>0).length,R=a.reduce((t,s)=>t+s.res,0);return`<tr><td>${n}</td><td>${a.length}</td><td>${a.length?Math.round(w/a.length*100):0}%</td><td>${R.toFixed(1)}</td><td>${a.length?(R/a.length).toFixed(2):'—'}</td></tr>`}).join('')}
+    function cf(s){const z=A.zones.find(z=>z.c<s.i&&(z.e==null||z.e>s.i)&&z.dir==s.dir&&s.entry>=z.lo*.998&&s.entry<=z.hi*1.002);return z?`<br><b class="${s.dir>0?'up':'dn'}">Конфлюэнс:</b> вход внутри ${z.dir>0?'бычьего':'медвежьего'} ${z.t}`:''}
+
+    function analyze(D){const c=D.map(x=>x.c),I={e20:ema(c,20),e50:ema(c,50),r:rsi(c),a:atr(D),sm:sma(c,20),sd:stdv(c,20),mc:macd(c),st:stoch(D)},sigs=[],n=D.length-1,Z=zones(D,I),Lv=levels(D,I);
+        for(const k in S){if(!cfg.on[k])continue;let last=-99;for(let i=0;i<n;i++){if(i-last<6)continue;const s=S[k].f(i,I,D,cfg.rr,Z);if(!s)continue;s.i=i;s.k=k;last=i;s.res=null;
+            for(let j=i+1;j<D.length;j++){const sl=s.dir>0?D[j].l<=s.sl:D[j].h>=s.sl,tp=s.dir>0?D[j].h>=s.tp:D[j].l<=s.tp;if(sl){s.res=-1;break}if(tp){s.res=Math.abs(s.tp-s.entry)/Math.abs(s.entry-s.sl);break}}sigs.push(s)}}
+        sigs.sort((a,b)=>a.i-b.i);return{I,sigs,zones:Z,lv:Lv}}
+
+    async function refresh(first){
+        const r=await load(cfg.sym,cfg.tf);D=r.D;live=r.live;A=analyze(D);
+        if(!TICKER_DATA[cfg.sym]) TICKER_DATA = await fetchBinanceData();
+        await fetchFearAndGreed();
+        await fetchDomHistory();
+        const key=s=>cfg.sym+cfg.tf+s.k+D[s.i].t;
+        if(first)A.sigs.forEach(s=>seen.add(key(s)));else A.sigs.filter(s=>s.i==D.length-2&&!seen.has(key(s))).forEach(s=>{seen.add(key(s));alert_(s)});
+        if(!sel&&!userPanned)off=0;
+        render()
+    }
+    function alert_(s){if(!cfg.nt)return;try{navigator.vibrate&&navigator.vibrate([200,100,200]);if(Notification.permission==='granted')new Notification(`${cfg.sym} ${s.dir>0?'LONG':'SHORT'}`,{body:`${S[s.k].n}: вход ${fmt(s.entry)}`})}catch(e){}}
+
+    function render(){
+        const c=D[D.length-1],p=D[D.length-2],e=$('#st');e.textContent=live?'● LIVE':'DEMO';e.className='pill '+(live?'live':'demo');
+        $('#sy').textContent=cfg.sym+' / USDT';$('#pr').textContent=fmt(c.c);const ch=(c.c/p.c-1)*100;$('#ch').innerHTML=`<span class="chg-badge ${ch>=0?'up':'dn'}">${ch>=0?'+':''}${ch.toFixed(2)}%</span>`;
+        const I=A.I,n=D.length-1,t=I.e20[n]>I.e50[n]&&c.c>I.e50[n]?'<span class="up">Бычий</span>':I.e20[n]<I.e50[n]&&c.c<I.e50[n]?'<span class="dn">Медвежий</span>':'Флэт';
+        $('#tr').innerHTML=t;$('#vo').textContent=(I.a[n]/c.c*100).toFixed(2)+'%';
+
+        card();lst();draw();$('#dn').textContent=live?'Биржа: Binance Spot API.':'Синтетические данные.'
+    }
+    function age(s){const b=D.length-1-s.i;return b<=0?'только что':b+' св. назад'}
+    function card(){const s=sel||[...A.sigs].reverse().find(x=>x.i>=D.length-6);
+        if(!s){$('#vd').innerHTML='<b>Сигналов нет</b><p class="mut">Ждем новые закрытия свечей.</p>';return}
+        const rr=Math.abs(s.tp-s.entry)/Math.abs(s.entry-s.sl),risk=cfg.cap*cfg.rk/100,q=risk/Math.abs(s.entry-s.sl);
+        const levText = MARKET_TYPE === 'FUTURES' ? ` · Плечо ${cfg.lev}x` : '';
+        $('#vd').innerHTML=`<div class="vh"><span class="tag ${s.dir>0?'up':'dn'}">${s.dir>0?'▲ LONG':'▼ SHORT'}</span><div><b>${S[s.k].n}</b><i>${sel?'Выбран':'Свежий'} · ${age(s)}</i></div></div><div class="grid3"><div><i>Вход</i>${fmt(s.entry)}</div><div><i>Стоп</i><span class="dn">${fmt(s.sl)}</span></div><div><i>Цель</i><span class="up">${fmt(s.tp)}</span></div></div><p class="mut" style="margin-top:10px;"><b>Логика:</b> ${s.note}.${cf(s)}<br>RR ${rr.toFixed(2)} · риск $${risk.toFixed(2)}${levText} → объем ${(q*s.entry).toFixed(0)} $</p>`}
+    function lst(){let h='';for(const k in S){const a=A.sigs.filter(s=>s.k==k&&s.res!=null),w=a.filter(s=>s.res>0).length;h+=`<tr><td>${S[k].n}</td><td>${a.length}</td><td>${a.length?Math.round(w/a.length*100):0}%</td><td>${a.reduce((t,s)=>t+s.res,0).toFixed(1)}</td></tr>`}$('#sts').innerHTML=h;cfstat();
+        $('#ls').innerHTML=A.sigs.slice().reverse().slice(0,30).map(s=>{const r=s.res==null?'в игре':s.res>0?`<span class="up">TP +${s.res.toFixed(1)}R</span>`:'<span class="dn">SL −1R</span>';return`<button class="sig ${s===sel?'on':''}" data-i="${A.sigs.indexOf(s)}"><b class="${s.dir>0?'up':'dn'}">${s.dir>0?'▲ LONG':'▼ SHORT'}</b> · ${S[s.k].n}<span class="mut" style="float:right">${age(s)}</span><br><span class="mut">Вход ${fmt(s.entry)} · SL ${fmt(s.sl)} · TP ${fmt(s.tp)} · ${r}</span></button>`}).join('')||'<p class="mut">Сигналов нет.</p>';
+        document.querySelectorAll('#ls .sig').forEach(e=>e.onclick=()=>{sel=A.sigs[+e.dataset.i];userPanned=true;off=Math.min(Math.max(0,D.length-N),Math.max(0,D.length-sel.i-(N/2|0)));tab(0);render()})}
+    
+    function draw(){
+        const cv=$('#cv'),W=cv.clientWidth;if(!W)return;
+        const isFS=!!document.fullscreenElement;
+        const H=isFS?cv.parentElement.clientHeight:380,dpr=devicePixelRatio||1;
+        cv.width=W*dpr;cv.height=H*dpr;
+        const g=cv.getContext('2d');g.scale(dpr,dpr);
+        const isLight = document.body.classList.contains('light-theme');
+        const bg=isLight?'#f8f9fa':'#121418',gridClr=isLight?'#e0e0e0':'#1e2026',upClr='#0ecb81',dnClr='#f6465d',txtClr='#848e9c',pClr='#f0b90b';
+        const I=A.I,end=D.length-off,st=Math.max(0,end-N),V=D.slice(st,end),PH=isFS?H-90:270,pad=55,rightSpace=5; 
+        const bw=(W-pad)/(N + rightSpace);
+        let hi=Math.max(...V.map(x=>x.h)),lo=Math.min(...V.map(x=>x.l));
+        if(sel&&sel.i>=st&&sel.i<end){hi=Math.max(hi,sel.tp,sel.entry,sel.sl);lo=Math.min(lo,sel.tp,sel.entry,sel.sl)}
+        const y=p=>8+(hi-p)/(hi-lo)*(PH-16),x=i=>(i-st+.5)*bw;
+        g.fillStyle=bg;g.fillRect(0,0,W,H);
+        g.font='10px Roboto';g.lineWidth=1;g.strokeStyle=gridClr;g.fillStyle=txtClr;
+        for(let k=0;k<5;k++){
+            const p=lo+(hi-lo)*k/4;
+            g.beginPath();g.moveTo(0,y(p));g.lineTo(W-pad,y(p));g.stroke();
+            g.fillText(fmt(p),W-pad+6,y(p)+3);
+        }
+        if(cfg.fvg||cfg.ob){
+            g.save();g.beginPath();g.rect(0,0,W-pad,PH);g.clip();
+            const act=A.zones.filter(z=>z.c<end&&(z.e==null||z.e>=end)&&(z.t=='FVG'?cfg.fvg:cfg.ob)),
+                  pick=[...act.filter(z=>z.t=='FVG').slice(-6),...act.filter(z=>z.t=='OB').slice(-4)];
+            pick.forEach(z=>{
+                const x0=x(Math.max(z.s,st))-bw/2,c=z.dir>0?upClr:dnClr,o=z.t=='OB',h=Math.max(2,y(z.lo)-y(z.hi));
+                g.globalAlpha=o?.22:.12;g.fillStyle=c;g.fillRect(x0,y(z.hi),W-pad-x0,h);
+                g.globalAlpha=o?.8:.5;g.strokeStyle=c;g.lineWidth=1;
+                if(!o)g.setLineDash([3,3]);g.strokeRect(x0,y(z.hi),W-pad-x0,h);g.setLineDash([]);
+                g.globalAlpha=1;g.fillStyle=c;g.fillText(z.t+(z.dir>0?' ▲':' ▼'),x0+3,y(z.hi)+10);
+            });
+            g.restore();
+        }
+        V.forEach((c,n)=>{
+            const i=st+n,u=c.c>=c.o,color=u?upClr:dnClr;
+            g.strokeStyle=g.fillStyle=color;
+            g.beginPath();g.moveTo(Math.floor(x(i))+0.5,y(c.h));g.lineTo(Math.floor(x(i))+0.5,y(c.l));g.stroke();
+            const topY=y(Math.max(c.o,c.c)),botY=y(Math.min(c.o,c.c)),h=Math.max(1,botY-topY);
+            g.fillRect(x(i)-bw*.38,topY,bw*.76,h);
+        });
+        if(cfg.liq){
+            g.save();g.beginPath();g.rect(0,0,W-pad,PH);g.clip();g.setLineDash([2,3]);g.lineWidth=1;
+            A.lv.forEach(l=>{
+                if(l.p<lo||l.p>hi||l.s>=end||(l.e!=null&&l.e<end))return;
+                const c=/H$/.test(l.k)?dnClr:upClr;
+                g.strokeStyle=g.fillStyle=c;
+                g.beginPath();g.moveTo(x(Math.max(l.s,st)),y(l.p));g.lineTo(W-pad,y(l.p));g.stroke();
+                g.textAlign='right';g.fillText(l.k,W-pad-4,y(l.p)-3);g.textAlign='left';
+            });
+            g.setLineDash([]);g.restore();
+        }
+        const line=(a,c)=>{g.strokeStyle=c;g.lineWidth=1.2;g.beginPath();for(let i=st;i<end;i++)i==st?g.moveTo(x(i),y(a[i])):g.lineTo(x(i),y(a[i]));g.stroke()};
+        if(cfg.em){line(I.e20,'#f0b90b');line(I.e50,'#9353d3')}
+        A.sigs.forEach(s=>{
+            if(s.i<st||s.i>=end)return;
+            const c=D[s.i],up=s.dir>0,px=x(s.i),py=up?y(c.l)+12:y(c.h)-12;
+            g.fillStyle=up?upClr:dnClr;g.beginPath();g.moveTo(px,py+(up?-6:6));g.lineTo(px-5,py+(up?4:-4));g.lineTo(px+5,py+(up?4:-4));g.fill();
+        });
+        if(sel&&sel.i>=st&&sel.i<end)[[sel.entry,pClr,'Entry'],[sel.sl,dnClr,'SL'],[sel.tp,upClr,'TP']].forEach(([p,c,t])=>{
+            g.strokeStyle=g.fillStyle=c;g.setLineDash([4,4]);g.beginPath();g.moveTo(x(sel.i),y(p));g.lineTo(W-pad,y(p));g.stroke();g.setLineDash([]);
+            g.fillText(t+' '+fmt(p),x(sel.i)+4,y(p)-3);
+        });
+        if(!off){
+            const l=D[D.length-1],u=l.c>=l.o,tagClr=u?upClr:dnClr;
+            g.fillStyle=tagClr;g.fillRect(W-pad,y(l.c)-9,pad,18);
+            g.fillStyle='#000';g.font='700 10px Roboto';g.fillText(fmt(l.c),W-pad+4,y(l.c)+3);
+        }
+
+        const ry=PH+12,rh=H-PH-20;g.fillStyle=isLight?'#ffffff':'#181a20';g.fillRect(0,ry,W-pad,rh);g.strokeStyle=gridClr;g.strokeRect(0,ry,W-pad,rh);
+        
+        if (SUB_INDICATOR === 'RSI') {
+            [30,70].forEach(v=>{
+                g.setLineDash([2,2]);g.beginPath();g.moveTo(0,ry+rh*(1-v/100));g.lineTo(W-pad,ry+rh*(1-v/100));g.stroke();
+                g.fillStyle=txtClr;g.fillText(v,W-pad+4,ry+rh*(1-v/100)+3);
+            });
+            g.setLineDash([]);g.strokeStyle=pClr;g.lineWidth=1.2;g.beginPath();
+            let f=1;for(let i=st;i<end;i++){if(isNaN(I.r[i]))continue;const yy=ry+rh*(1-I.r[i]/100);f?(g.moveTo(x(i),yy),f=0):g.lineTo(x(i),yy)}
+            g.stroke();g.fillStyle=txtClr;g.fillText('RSI 14: '+(I.r[end-1]||0).toFixed(1),4,ry+12);
+        } else if (SUB_INDICATOR === 'VOL') {
+            const maxV = Math.max(...V.map(k=>k.v)) || 1;
+            V.forEach((c, n) => {
+                const i = st + n;
+                const vH = (c.v / maxV) * (rh - 14);
+                const u = c.c >= c.o;
+                g.fillStyle = u ? 'rgba(14, 203, 129, 0.4)' : 'rgba(246, 70, 93, 0.4)';
+                g.fillRect(x(i)-bw*.38, ry + rh - vH, bw*.76, vH);
+            });
+            g.fillStyle=txtClr;g.fillText('VOL: ' + (D[end-1].v||0).toFixed(1), 4, ry+12);
+        } else if (SUB_INDICATOR === 'MACD') {
+            const mc = I.mc;
+            const maxH = Math.max(...V.map((_, idx) => Math.abs(mc.hist[st + idx]) || 0)) || 1;
+            V.forEach((_, n) => {
+                const i = st + n;
+                const val = mc.hist[i] || 0;
+                const vH = (val / maxH) * (rh / 2 - 4);
+                g.fillStyle = val >= 0 ? upClr : dnClr;
+                g.fillRect(x(i) - bw * .38, ry + rh / 2 - (val >= 0 ? vH : 0), bw * .76, Math.abs(vH));
+            });
+            g.fillStyle = txtClr; g.fillText('MACD Hist: ' + (mc.hist[end - 1] || 0).toFixed(2), 4, ry + 12);
+        } else if (SUB_INDICATOR === 'STOCH') {
+            const stArr = I.st;
+            g.strokeStyle = '#2196f3'; g.lineWidth = 1.2; g.beginPath();
+            let f = 1; for (let i = st; i < end; i++) { if (isNaN(stArr[i])) continue; const yy = ry + rh * (1 - stArr[i] / 100); f ? (g.moveTo(x(i), yy), f = 0) : g.lineTo(x(i), yy); }
+            g.stroke(); g.fillStyle = txtClr; g.fillText('Stoch %K: ' + (stArr[end - 1] || 0).toFixed(1), 4, ry + 12);
+        } else if (SUB_INDICATOR === 'ATR') {
+            const atrArr = I.a;
+            const maxA = Math.max(...V.map((_, idx) => atrArr[st + idx])) || 1;
+            const minA = Math.min(...V.map((_, idx) => atrArr[st + idx])) || 0;
+            g.strokeStyle = '#e91e63'; g.lineWidth = 1.2; g.beginPath();
+            let f = 1; for (let i = st; i < end; i++) { const yy = ry + rh * (1 - (atrArr[i] - minA) / (maxA - minA || 1)); f ? (g.moveTo(x(i), yy), f = 0) : g.lineTo(x(i), yy); }
+            g.stroke(); g.fillStyle = txtClr; g.fillText('ATR 14: ' + (atrArr[end - 1]||0).toFixed(2), 4, ry + 12);
+        }
+    }
+
+    function setSubIndicator(type) {
+        SUB_INDICATOR = type;
+        document.querySelectorAll('.subind-btn').forEach(b => b.classList.remove('on'));
+        $(`#subind-${type.toLowerCase()}`).classList.add('on');
+        draw();
+    }
+
+    async function scan(){$('#sc').innerHTML='<p class="mut">Сканирую монеты…</p>';const res=[];
+        const checkList = MARKET_TYPE === 'FAVS' ? getFaves() : ALL_COINS;
+        await Promise.all(checkList.map(async sym=>{const r=await load(sym,cfg.tf),a=analyze(r.D);a.sigs.filter(s=>s.i>=r.D.length-5).forEach(s=>res.push({sym,s,n:r.D.length,live:r.live}))}));
+        res.sort((a,b)=>b.s.i-b.n-(a.s.i-a.n));
+        $('#sc').innerHTML=(res.length?'':'<div class="tile full mut">Свежих сигналов не найдено.</div>')+res.map((x,n)=>{const b=x.n-1-x.s.i;return`<button class="sig" data-n="${n}"><b>${x.sym}</b> <b class="${x.s.dir>0?'up':'dn'}">${x.s.dir>0?'▲ LONG':'▼ SHORT'}</b> · ${S[x.s.k].n}<span class="mut" style="float:right">${b<=0?'только что':b+' св. назад'}</span><br><span class="mut">Вход ${fmt(x.s.entry)} · SL ${fmt(x.s.sl)} · TP ${fmt(x.s.tp)}</span></button>`}).join('');
+        document.querySelectorAll('#sc .sig').forEach(e=>e.onclick=()=>{const x=res[+e.dataset.n];cfg.sym=x.sym;save();tab(0);coins();refresh()})}
+
+    function tab(n){document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i==n));document.querySelectorAll('#nv button').forEach((e,i)=>e.classList.toggle('on',i==n));scrollTo(0,0);if(n==0&&D.length)draw();if(n==3){drawGauge();fetchDomHistory();}}
+    
+    function setupRefreshLoop() {
+        if (refreshTimer) clearInterval(refreshTimer);
+        if (cfg.rate > 0) {
+            refreshTimer = setInterval(() => {
+                if (live && !document.hidden) refresh();
+            }, cfg.rate);
+        }
+        const rateTxt = cfg.rate === 1000 ? '1 сек' : cfg.rate === 2000 ? '2 сек' : cfg.rate === 5000 ? '5 сек' : cfg.rate === 10000 ? '10 сек' : cfg.rate === 30000 ? '30 сек' : 'Отключено';
+        $('#rate-btn').textContent = rateTxt;
+    }
+
+    function setMarketType(type) {
+        MARKET_TYPE = type;
+        $('#tab-spot').classList.toggle('on', type==='SPOT');
+        $('#tab-fut').classList.toggle('on', type==='FUTURES');
+        $('#tab-fav').classList.toggle('on', type==='FAVS');
+
+        const isFut = type === 'FUTURES';
+        $('#lev-field').style.display = isFut ? 'flex' : 'none';
+        $('#rm-box').classList.toggle('has-lev', isFut);
+
+        initCoinsList();
+    }
+
+    async function initCoinsList() {
+        const binance = await fetchBinanceData();
+        TICKER_DATA = binance;
+        const base = ['BTC','ETH','SOL','BNB','XRP','DOGE','ADA','AVAX','DOT','LINK','MATIC','UNI','TRX','LTC','BCH'];
+        const bybit = ['BTC','ETH','SOL','XRP','TON','SUI','PEPE','WIF','WLD','NEAR','OP','ARB','APT','FLOKI','FET'];
+        
+        if (MARKET_TYPE === 'SPOT') {
+            ALL_COINS = [...new Set([...base, ...Object.keys(binance)])].sort();
+        } else if (MARKET_TYPE === 'FUTURES') {
+            ALL_COINS = [...new Set([...base, ...bybit])].sort();
+        } else {
+            ALL_COINS = getFaves();
+        }
+
+        coins();
+        refresh(1);
+    }
+
+    function coins(){
+        $('#coin-select').textContent = cfg.sym + ' / USDT';
+        $('#tf-select-btn').textContent = cfg.tf;
+        $('#rr-btn').textContent = cfg.rr;
+        $('#lev-btn').textContent = cfg.lev + 'x';
+    }
+
+    function openCoinModal() { $('#coin-modal').classList.add('on'); updateCoinListUi(); }
+    function closeCoinModal() { $('#search-coin').value = ''; $('#coin-modal').classList.remove('on'); }
+
+    function openTfModal() {
+        $('#tf-modal').classList.add('on');
+        $('#tf-grid-body').innerHTML = TFS.map(t => `<div class="custom-select-item ${t===cfg.tf?'on':''}" onclick="selectTf('${t}')"><span>${t}</span>${t===cfg.tf?'✓':''}</div>`).join('');
+    }
+    function closeTfModal() { $('#tf-modal').classList.remove('on'); }
+
+    function selectTf(t) {
+        cfg.tf = t;
+        userPanned = false; off = 0; save();
+        coins(); refresh(); closeTfModal();
+    }
+
+    function openGenericModal(title, options, currentValue, onSelect) {
+        $('#generic-modal-title').textContent = title;
+        $('#generic-modal-list').innerHTML = options.map(opt => `
+            <div class="custom-select-item ${opt.val == currentValue ? 'on' : ''}" onclick="window._genSelect('${opt.val}')">
+                <span>${opt.lbl}</span>
+                ${opt.val == currentValue ? '✓' : ''}
+            </div>
+        `).join('');
+        window._genSelect = (val) => {
+            onSelect(val);
+            closeGenericModal();
+        };
+        $('#generic-modal').classList.add('on');
+    }
+    function closeGenericModal() { $('#generic-modal').classList.remove('on'); }
+
+    function openRrModal() {
+        openGenericModal('Выбор Risk-Reward Ratio', [
+            {val: 1.5, lbl: '1.5'},
+            {val: 2, lbl: '2.0'},
+            {val: 3, lbl: '3.0'},
+            {val: 4, lbl: '4.0'}
+        ], cfg.rr, (val) => {
+            cfg.rr = parseFloat(val);
+            save(); A = analyze(D); sel = null; coins(); render();
+        });
+    }
+
+    function openLevModal() {
+        openGenericModal('Выбор кредитного плеча', [
+            {val: 1, lbl: '1x'},
+            {val: 2, lbl: '2x'},
+            {val: 5, lbl: '5x'},
+            {val: 10, lbl: '10x'},
+            {val: 20, lbl: '20x'},
+            {val: 50, lbl: '50x'},
+            {val: 100, lbl: '100x'}
+        ], cfg.lev, (val) => {
+            cfg.lev = parseInt(val);
+            save(); coins(); card();
+        });
+    }
+
+    function openThemeModal() {
+        openGenericModal('Тема интерфейса', [
+            {val: 'dark', lbl: 'Тёмная'},
+            {val: 'light', lbl: 'Светлая'},
+            {val: 'auto', lbl: 'Автоматическая'}
+        ], cfg.theme || 'dark', (val) => {
+            applyTheme(val);
+        });
+    }
+
+    function openRateModal() {
+        openGenericModal('Интервал обновления', [
+            {val: 1000, lbl: '1 сек'},
+            {val: 2000, lbl: '2 сек'},
+            {val: 5000, lbl: '5 сек'},
+            {val: 10000, lbl: '10 сек'},
+            {val: 30000, lbl: '30 сек'},
+            {val: 0, lbl: 'Отключено'}
+        ], cfg.rate, (val) => {
+            cfg.rate = parseInt(val);
+            save(); setupRefreshLoop();
+        });
+    }
+
+    function toggleSortMode(mode) {
+        if (mode === 'GAIN') {
+            if (SORT_MODE === 'GAIN') {
+                SORT_DIR_GAIN = SORT_DIR_GAIN === 'DESC' ? 'ASC' : 'DESC';
+            } else {
+                SORT_MODE = 'GAIN';
+                SORT_DIR_GAIN = 'DESC';
+            }
+        } else if (mode === 'VOL') {
+            if (SORT_MODE === 'VOL') {
+                SORT_DIR_VOL = SORT_DIR_VOL === 'DESC' ? 'ASC' : 'DESC';
+            } else {
+                SORT_MODE = 'VOL';
+                SORT_DIR_VOL = 'DESC';
+            }
+        } else {
+            SORT_MODE = 'FAV';
+        }
+        updateSortButtonsUi();
+        updateCoinListUi();
+    }
+
+    function updateSortButtonsUi() {
+        $('#sort-fav-btn').classList.toggle('on', SORT_MODE === 'FAV');
+        $('#sort-gain-btn').classList.toggle('on', SORT_MODE === 'GAIN');
+        $('#sort-vol-btn').classList.toggle('on', SORT_MODE === 'VOL');
+
+        $('#sort-gain-btn').textContent = `Рост 24h ${SORT_DIR_GAIN === 'DESC' ? '↓' : '↑'}`;
+        $('#sort-vol-btn').textContent = `Объем ${SORT_DIR_VOL === 'DESC' ? '↓' : '↑'}`;
+    }
+
+    function updateCoinListUi() {
+        const faves = getFaves();
+        let list = [...ALL_COINS];
+
+        if (SORT_MODE === 'GAIN') {
+            list.sort((a, b) => {
+                const cA = TICKER_DATA[a]?.c ?? -999;
+                const cB = TICKER_DATA[b]?.c ?? -999;
+                return SORT_DIR_GAIN === 'DESC' ? cB - cA : cA - cB;
+            });
+        } else if (SORT_MODE === 'VOL') {
+            list.sort((a, b) => {
+                const vA = TICKER_DATA[a]?.v ?? 0;
+                const vB = TICKER_DATA[b]?.v ?? 0;
+                return SORT_DIR_VOL === 'DESC' ? vB - vA : vA - vB;
+            });
+        } else {
+            list.sort((a, b) => {
+                const aFav = faves.includes(a);
+                const bFav = faves.includes(b);
+                if (aFav && !bFav) return -1;
+                if (!aFav && bFav) return 1;
+                return a.localeCompare(b);
+            });
+        }
+
+        const search = $('#search-coin').value.toUpperCase();
+        if (search) list = list.filter(c => c.includes(search));
+
+        $('#coin-list-body').innerHTML = list.map(c => {
+            const d = TICKER_DATA[c] || {};
+            const is_fav = isFav(c);
+            return `
+                <div class="coin-item ${c===cfg.sym?'on':''}" onclick="selectCoin('${c}')">
+                    <div class="coin-info">
+                        <button class="star-icn ${is_fav?'on':''}" onclick="event.stopPropagation(); toggleFav('${c}')">
+                            <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                        </button>
+                        <div>
+                            <div class="coin-ticker">${c}</div>
+                            <div class="coin-vol">Объем: ${d.v?(d.v/1e6).toFixed(1)+'M':'—'}</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="coin-price">${d.p?fmt(d.p):'—'}</div>
+                        <div class="chg-badge ${d.c>=0?'up':'dn'}">${d.c!=null ? (d.c>=0?'+':'')+d.c.toFixed(2)+'%' :'—'}</div>
+                    </div>
+                </div>
+            `;
+        }).join('') || '<p class="mut" style="text-align:center; padding:20px;">Список пуст</p>';
+    }
+
+    function selectCoin(sym) {
+        cfg.sym = sym;
+        userPanned = false; off = 0; save(); 
+        coins(); refresh(); closeCoinModal();
+    }
+
+    document.querySelectorAll('#nv button').forEach(b=>b.onclick=()=>tab(+b.dataset.t));
+    $('#so').innerHTML=Object.keys(S).map(k=>`<label class="opt"><span><b>${S[k].n}</b><br><span class="mut">${S[k].d}</span></span><input type="checkbox" data-k="${k}" ${cfg.on[k]?'checked':''}></label>`).join('');
+    document.querySelectorAll('#so input').forEach(c=>c.onchange=()=>{cfg.on[c.dataset.k]=c.checked?1:0;save();A=analyze(D);sel=null;render()});
+    
+    $('#cap').value=cfg.cap;$('#rk').value=cfg.rk;$('#cap').oninput=e=>{cfg.cap=+e.target.value||0;save();card()};$('#rk').oninput=e=>{cfg.rk=+e.target.value||0;save();card()};
+
+    $('#cfg-btn').onclick = (e) => { e.stopPropagation(); $('#chart-popover').classList.toggle('on'); };
+    document.addEventListener('click', (e) => { if (!e.target.closest('#chart-popover') && !e.target.closest('#cfg-btn')) { $('#chart-popover').classList.remove('on'); } });
+
+    $('#em').checked=!!cfg.em;$('#em').onchange=e=>{cfg.em=e.target.checked?1:0;save();draw()};
+    $('#fv').checked=!!cfg.fvg;$('#fv').onchange=e=>{cfg.fvg=e.target.checked?1:0;save();draw()};
+    $('#ob').checked=!!cfg.ob;$('#ob').onchange=e=>{cfg.ob=e.target.checked?1:0;save();draw()};
+    $('#lq').checked=!!cfg.liq;$('#lq').onchange=e=>{cfg.liq=e.target.checked?1:0;save();draw()};
+    $('#nt').checked=!!cfg.nt;$('#nt').onchange=e=>{cfg.nt=e.target.checked?1:0;save();if(cfg.nt)try{Notification.requestPermission()}catch(x){}};
+    $('#sb').onclick=scan;
+
+    $('#fs-btn').onclick = () => {
+        const target = $('#chart-card');
+        if (!document.fullscreenElement) {
+            if (target.requestFullscreen) target.requestFullscreen();
+            else if (target.webkitRequestFullscreen) target.webkitRequestFullscreen();
+        } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        }
+    };
+    document.addEventListener('fullscreenchange', draw);
+
+    const cv=$('#cv'),P=new Map();let G=null;
+    const gst=()=>{const r=cv.getBoundingClientRect(),a=[...P.values()];return{mx:a.reduce((s,p)=>s+p.x,0)/a.length-r.left,d:a.length>1?Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y):0}};
+    const gbeg=()=>{if(!P.size){G=null;return}const q=gst(),st=Math.max(0,D.length-off-N),bw=(cv.clientWidth-55)/(N+5);G={n:N,d:q.d,idx:st+q.mx/bw}};
+    
+    cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);P.set(e.pointerId,{x:e.clientX,y:e.clientY});gbeg()};
+    cv.onpointermove=e=>{if(!P.has(e.pointerId)||!G)return;P.set(e.pointerId,{x:e.clientX,y:e.clientY});const q=gst();let n=G.n;if(P.size>1&&G.d>10&&q.d>10)n=Math.min(250,Math.max(20,Math.round(G.n*G.d/q.d)));const bw=(cv.clientWidth-55)/(n+5),st=G.idx-q.mx/bw;N=n;userPanned=true;off=Math.min(Math.max(-5,D.length-n),Math.max(-5,Math.round(D.length-(st+n))));draw()};
+    cv.onpointerup=cv.onpointercancel=e=>{P.delete(e.pointerId);gbeg()};
+    cv.onwheel=e=>{e.preventDefault();N=Math.min(250,Math.max(20,Math.round(N*(e.deltaY>0?1.1:.9))));draw()};
+    addEventListener('resize',()=>{draw();drawGauge();drawDomHistory();});
+
+    applyTheme(cfg.theme || 'dark');
+    setupRefreshLoop();
+    initCoinsList();
+</script>
+</body>
+</html>
